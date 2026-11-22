@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laba Batik Bu Sri: Lab 3D Fungsi Kuadrat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2EDE3; --surface:#FFFCF6; --surface2:#F7F1E6; --ink:#1D2333; --muted:#5B6274; --line:#DCD1BD;
+  --soga:#8E5420; --gold:#B9842F; --nila:#1E2B4D; --tarum:#2B7A69; --mengkudu:#AE3F2C; --focus:#2F6FE0;
+  --ok-bg:#E3F2EC; --bad-bg:#F8E6E1;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121624; --surface:#1A2032; --surface2:#20273C; --ink:#EEE8DC; --muted:#A5AABA; --line:#2E3652;
+    --soga:#D99A58; --gold:#E2B260; --tarum:#5DBBA5; --mengkudu:#E7826A; --focus:#7BA6FF;
+    --ok-bg:#183A31; --bad-bg:#432622; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121624; --surface:#1A2032; --surface2:#20273C; --ink:#EEE8DC; --muted:#A5AABA; --line:#2E3652;
+  --soga:#D99A58; --gold:#E2B260; --tarum:#5DBBA5; --mengkudu:#E7826A; --focus:#7BA6FF;
+  --ok-bg:#183A31; --bad-bg:#432622; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.55}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;flex:none;border-radius:50%;background:
+  radial-gradient(circle at 50% 50%,var(--surface) 0 18%,transparent 19%),
+  conic-gradient(from 45deg,var(--soga) 0 25%,var(--gold) 0 50%,var(--soga) 0 75%,var(--gold) 0)}
+.brand h1{font-size:16px;margin:0;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;color:var(--muted);font-size:12px;font-weight:500}
+.hdr-actions{margin-left:auto;display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--surface2);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--soga)}
+.btn.primary{background:var(--nila);border-color:var(--nila);color:#F6EFE2}
+:root[data-theme="dark"] .btn.primary{background:var(--gold);border-color:var(--gold);color:#1A1406}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{background:var(--gold);border-color:var(--gold);color:#1A1406}}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(340px,1fr);min-height:0}
+.stage{position:relative;overflow:hidden;min-height:0;touch-action:none;
+  background:radial-gradient(120% 90% at 50% 0%,#2C3B66 0%,#1A2340 55%,#10162A 100%)}
+.stage.ar{background:#000}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.stage.ar video{display:block}
+#labels{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;font-size:12px;font-weight:700;color:#F6EFE2;
+  background:rgba(16,22,42,.72);padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.14)}
+.lbl.tick{background:none;border:none;color:rgba(246,239,226,.75);font-weight:600;font-size:11px;padding:0}
+.lbl.gold{color:#F3CF85}.lbl.green{color:#8FE0C8}.lbl.red{color:#FFB4A1}
+.hud{position:absolute;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.chip{font-size:12px;font-weight:600;color:#F6EFE2;background:rgba(16,22,42,.7);border:1px solid rgba(255,255,255,.15);padding:4px 10px;border-radius:999px;display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%}
+.hint3d{position:absolute;right:12px;top:12px;font-size:12px;color:rgba(246,239,226,.8);background:rgba(16,22,42,.6);padding:5px 10px;border-radius:8px;pointer-events:none}
+aside{display:flex;flex-direction:column;min-height:0;background:var(--surface);border-left:1px solid var(--line)}
+.steps{display:flex;gap:4px;padding:10px 12px;border-bottom:1px solid var(--line);overflow-x:auto}
+.step{flex:1 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:0;border:1px solid var(--line);background:var(--surface2);
+  padding:6px 9px;border-radius:9px;cursor:pointer;min-width:56px;text-align:left}
+.step b{font-size:13px}.step span{font-size:11px;color:var(--muted)}
+.step[aria-current="step"]{border-color:var(--soga);box-shadow:inset 0 -3px 0 var(--soga)}
+.step.done b::after{content:" ✓";color:var(--tarum)}
+.content{padding:18px 20px 28px;overflow-y:auto;min-height:0}
+.content h2{font-size:21px;line-height:1.25;margin:0 0 4px;letter-spacing:-.015em}
+.meta{color:var(--muted);font-size:13px;margin:0 0 14px}
+.content p{margin:0 0 12px;max-width:62ch}
+.eq{font-family:"Cambria Math","Times New Roman",serif;font-size:17px;background:var(--surface2);border:1px solid var(--line);border-left:4px solid var(--gold);
+  padding:8px 12px;border-radius:8px;margin:0 0 12px;overflow-x:auto;white-space:nowrap}
+.task{border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;background:var(--surface2)}
+.task h3{margin:0 0 6px;font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.opt{border:1px solid var(--line);background:var(--surface);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px}
+.opt[aria-pressed="true"]{border-color:var(--soga);background:var(--bg)}
+.fb{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:14px;display:none}
+.fb.show{display:block}
+.fb.ok{background:var(--ok-bg)}.fb.bad{background:var(--bad-bg)}.fb.info{background:var(--surface);border:1px solid var(--line)}
+label.tog{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;cursor:pointer}
+.slider{margin:10px 0}
+.slider .top{display:flex;justify-content:space-between;font-weight:600;font-size:14px}
+input[type=range]{width:100%;accent-color:var(--soga)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.stat span{display:block;font-size:12px;color:var(--muted)}
+.stat b{font-size:16px}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.form label{font-size:13px;font-weight:600;display:flex;flex-direction:column;gap:4px}
+.form input,textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.badge.ai{border-color:var(--tarum);color:var(--tarum)}
+.story{border-left:3px solid var(--soga);padding-left:12px;margin:10px 0 12px}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:20px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--nila);color:#F6EFE2;padding:10px 16px;border-radius:10px;
+  max-width:min(92vw,480px);font-size:14px;z-index:20;display:none}
+.toast.show{display:block}
+ul.clean{padding-left:18px;margin:0 0 12px}
+ul.clean li{margin-bottom:4px}
+@media (max-width:860px){
+  .main{grid-template-columns:1fr;grid-template-rows:48vh auto;overflow-y:auto}
+  .app{grid-template-rows:auto minmax(0,1fr)}
+  aside{border-left:none;border-top:1px solid var(--line)}
+  .content{overflow:visible}
+  .brand small{display:none}
+}
+@media (max-width:420px){ .form,.stats{grid-template-columns:1fr} .hdr-actions .btn{padding:7px 10px;font-size:13px} }
+.lbl.info{pointer-events:auto;cursor:pointer;border-color:rgba(159,232,255,.7);font:inherit;font-size:12px;font-weight:700}
+.lbl.info:hover{background:rgba(30,43,77,.95)}
+.infocard{position:absolute;left:12px;top:12px;width:min(340px,calc(100% - 24px));max-height:calc(100% - 70px);overflow-y:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-left:4px solid #6FC8E8;border-radius:12px;padding:12px 14px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.infocard h3{margin:0 26px 6px 0;font-size:15px}.infocard p{margin:0 0 8px;font-size:13.5px}.infocard .ifx{font-family:"Cambria Math","Times New Roman",serif;color:var(--muted)}
+.infocard .ix{position:absolute;right:8px;top:8px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--muted)}
+.infocard[hidden]{display:none}
+details.concept{border:1px solid var(--line);border-left:4px solid #6FC8E8;border-radius:10px;padding:8px 12px;margin:0 0 12px;background:var(--surface2)}
+details.concept summary{cursor:pointer;font-weight:700;font-size:14px}
+details.concept p{margin:8px 0 0;font-size:14px}
+.bepsteps{font-family:"Cambria Math","Times New Roman",serif;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px;line-height:1.6;overflow-x:auto}
+.infocard .bepsteps{font-size:13px}
+dialog#dosen{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(740px,94vw);max-height:90vh}
+dialog#dosen::backdrop{background:rgba(8,12,24,.55)}
+.dwrap{padding:18px 20px;overflow-y:auto;max-height:calc(90vh - 70px)}
+.dwrap h2{margin:0 0 4px;font-size:20px}
+.dwrap fieldset{border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px;margin:12px 0}
+.dwrap legend{font-weight:700;font-size:14px;padding:0 6px}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.dgrid label,.dfull{font-size:13px;font-weight:600;display:flex;flex-direction:column;gap:4px}
+.dgrid input,.dfull input,.dfull textarea{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:7px 9px;width:100%;font-weight:500}
+.dfoot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--line);background:var(--surface2)}
+.hdr-actions .btn[hidden]{display:none}
+@media (max-width:520px){.dgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="mark" aria-hidden="true"></div>
+      <div><h1 id="brandName">Laba Batik Bu Sri</h1><small>Lab 3D fungsi kuadrat untuk Matematika Bisnis</small></div></div>
+    <div class="hdr-actions">
+      <button class="btn" id="btnDosen" type="button" hidden>⚙️ Mode Dosen</button>
+      <button class="btn" id="btnNarr" type="button">🔊 Narasi</button>
+      <button class="btn" id="btnAR" type="button">📷 Mode AR</button>
+    </div>
+  </header>
+  <div class="main">
+    <div class="stage" id="stage">
+      <video id="cam" playsinline muted></video>
+      <div id="labels"></div>
+      <div class="hud" id="hud"></div>
+      <div class="hint3d" id="hint3d">Geser untuk memutar · sentuh ⓘ untuk penjelasan titik</div>
+      <div class="infocard" id="infoCard" hidden role="dialog" aria-live="polite"><button type="button" class="ix" id="infoClose" aria-label="Tutup penjelasan">✕</button><h3></h3><div class="ib"></div></div>
+    </div>
+    <aside>
+      <nav class="steps" id="steps" aria-label="Tahapan belajar"></nav>
+      <div class="content" id="content" tabindex="-1"></div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<dialog id="dosen" aria-labelledby="dTitle"><form method="dialog">
+<div class="dwrap"><h2 id="dTitle">Mode Dosen: ubah soal</h2><p class="meta" id="dMode"></p>
+<fieldset><legend>Identitas dan cerita</legend><div class="dgrid">
+<label>Judul aplikasi<input name="judul" maxlength="60"></label><label>Nama tokoh<input name="nama" maxlength="40"></label>
+<label>Profil tokoh<input name="profil" maxlength="120" placeholder="perajin batik cap di Pekalongan"></label><label>Nama produk<input name="produk" maxlength="40" placeholder="kain batik"></label>
+<label>Satuan produk<input name="satuan" maxlength="20" placeholder="lembar"></label></div></fieldset>
+<fieldset><legend>Data usaha (dalam ribu rupiah)</legend><div class="dgrid">
+<label>Harga maksimum (a pada p = a − bq)<input name="a0" inputmode="decimal"></label><label>Penurunan harga per unit (b pada p = a − bq)<input name="b0" inputmode="decimal"></label>
+<label>Biaya tetap per bulan<input name="F" inputmode="decimal"></label><label>Biaya variabel per unit<input name="v" inputmode="decimal"></label></div></fieldset>
+<fieldset><legend>Skenario Lab koefisien (Tahap 5)</legend>
+<label class="dfull">Perubahan yang dialami tokoh<input name="labDesc" maxlength="120" placeholder="berhenti menyewa kios dan beralih berjualan di marketplace"></label>
+<div class="dgrid" style="margin-top:10px"><label>Perubahan biaya tetap (negatif = turun)<input name="dF" inputmode="decimal"></label><label>Perubahan biaya per unit (negatif = turun)<input name="dv" inputmode="decimal"></label></div></fieldset>
+<fieldset><legend>Latihan GenAI (Tahap 6)</legend><label class="dfull">Arahan untuk GenAI (opsional)<textarea name="aiKonteks" maxlength="300" placeholder="contoh: produk kuliner khas Sumatra, jumlah produksi di bawah 100 unit"></textarea></label></fieldset>
+<div class="fb" id="dPrev"></div></div>
+<div class="dfoot"><button class="btn" id="dReset" type="button">Kembalikan soal bawaan</button><span style="display:flex;gap:8px"><button class="btn" id="dCancel" type="button">Batal</button><button class="btn primary" id="dSave" type="submit">Simpan soal</button></span></div>
+</form></dialog>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+/* ========== Format ========== */
+const fmt=n=>Math.round(n).toLocaleString('id-ID');
+const f2=x=>(Math.round(x*100)/100).toLocaleString('id-ID',{maximumFractionDigits:2});
+const rp=v=>(v<0?'−':'')+'Rp'+fmt(Math.abs(v)*1000);
+const shortRp=v=>{const a=Math.abs(v),s=v<0?'−':'';return a>=1000?s+'Rp'+(a/1000).toLocaleString('id-ID',{maximumFractionDigits:1})+' jt':s+'Rp'+fmt(a)+' rb'};
+const $=s=>document.querySelector(s);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const num=v=>parseFloat(String(v??'').replace(/rp/i,'').replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.'));
+const isInt=x=>Math.abs(x-Math.round(x))<1e-9;
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));for(const k of [1,2,2.5,5,10])if(k*p>=x-1e-9)return k*p;return 10*p}
+function ticks(a,b){const s=niceStep((b-a)/6),out=[];for(let t=Math.ceil(a/s)*s;t<=b+1e-9;t+=s)out.push(Math.round(t*100)/100);return out}
+const pickStep=(vals,cands)=>cands.find(s=>vals.every(v=>Math.abs(v/s-Math.round(v/s))<1e-9))||cands[cands.length-1];
+
+/* ========== Konfigurasi (Mode Dosen) ========== */
+const DEFAULT={judul:'Laba Batik Bu Sri',nama:'Bu Sri',profil:'perajin batik cap di Pekalongan',produk:'kain batik',satuan:'lembar',
+  a0:300,b0:2,F:5400,v:60,labDesc:'berhenti menyewa kios di pasar dan beralih berjualan di marketplace',dF:-2200,dv:40,aiKonteks:''};
+let C={...DEFAULT};
+function model(c){const B=c.a0-c.v,disc=B*B-4*c.b0*c.F,sq=Math.sqrt(Math.max(disc,0));
+  const F2=c.F+c.dF,v2=c.v+c.dv,B2=c.a0-v2,disc2=B2*B2-4*c.b0*F2,sq2=Math.sqrt(Math.max(disc2,0));
+  return{B,disc,q1:(B-sq)/(2*c.b0),q2:(B+sq)/(2*c.b0),qs:B/(2*c.b0),pmax:disc/(4*c.b0),qR:c.a0/(2*c.b0),Rmax:c.a0*c.a0/(4*c.b0),q0:c.a0/c.b0,
+    F2,v2,B2,disc2,t1:(B2-sq2)/(2*c.b0),t2:(B2+sq2)/(2*c.b0),ts:B2/(2*c.b0),tmax:disc2/(4*c.b0)}}
+function validate(c){const e=[],w=[];const ok=x=>typeof x==='number'&&isFinite(x);
+  ['judul','nama','profil','produk','satuan'].forEach(k=>{if(!c[k]||!String(c[k]).trim())e.push('Kolom '+k+' wajib diisi.')});
+  if(!ok(c.a0)||c.a0<=0)e.push('Harga maksimum harus lebih dari 0.');
+  if(!ok(c.b0)||c.b0<=0)e.push('Penurunan harga per unit harus lebih dari 0.');
+  if(!ok(c.F)||c.F<=0)e.push('Biaya tetap harus lebih dari 0.');
+  if(!ok(c.v)||c.v<0)e.push('Biaya variabel per unit tidak boleh negatif.');
+  if(!ok(c.dF)||!ok(c.dv))e.push('Perubahan biaya pada Lab koefisien harus berupa angka (boleh negatif).');
+  if(e.length)return{e,w};
+  const m=model(c);
+  if(c.a0<=c.v)e.push('Harga maksimum harus lebih besar daripada biaya variabel per unit.');
+  else if(m.disc<=0)e.push('Dengan angka ini usaha tidak pernah untung (laba maksimum ≤ 0). Turunkan biaya tetap atau naikkan harga maksimum.');
+  if(c.F+c.dF<=0)e.push('Biaya tetap setelah perubahan harus tetap lebih dari 0.');
+  if(c.v+c.dv<0)e.push('Biaya variabel setelah perubahan tidak boleh negatif.');
+  if(!e.length&&m.disc2<=0)e.push('Setelah perubahan biaya, usaha tidak pernah untung. Kecilkan kenaikan biaya.');
+  if(!e.length&&c.dF===0&&c.dv===0)e.push('Isi minimal satu perubahan biaya pada Lab koefisien.');
+  if(!e.length){if(!isInt(m.q1)||!isInt(m.q2))w.push('Titik impas tidak bulat ('+f2(m.q1)+' dan '+f2(m.q2)+'), sehingga soal memakai jawaban desimal.');
+    if(!isInt(m.t1)||!isInt(m.t2))w.push('Titik impas pada Lab koefisien tidak bulat.')}
+  return{e,w}}
+function normalize(o){const c={...DEFAULT,...o};['a0','b0','F','v','dF','dv'].forEach(k=>c[k]=+c[k]);
+  ['judul','nama','profil','produk','satuan','labDesc','aiKonteks'].forEach(k=>c[k]=String(c[k]??'').slice(0,k==='aiKonteks'?300:120));return c}
+const LOCALKEY='labaBatik.cfg';
+try{const s=JSON.parse(localStorage.getItem(LOCALKEY)||'null');if(s){const c=normalize(s);if(!validate(c).e.length)C=c}}catch(e){}
+let M=model(C);
+const R=q=>C.a0*q-C.b0*q*q, Cost=q=>C.F+C.v*q, P=q=>R(q)-Cost(q), price=q=>C.a0-C.b0*q;
+const T=q=>-C.b0*q*q+M.B2*q-M.F2;
+const S=()=>(M.q2-M.q1)/6;                    // jarak antarbola
+const pq=j=>M.q1-1.5*S()+j*S()/2;             // grid produksi (j = 0..18), puncak di j = 9
+const coefStr=(a,b,c)=>`π(q) = −${f2(a)===f2(1)?'':f2(a)}q² + ${f2(b)}q − ${f2(c)}`;
+
+/* ========== State ========== */
+const KEY='labaBatik.v2';
+function fresh(){return{s1:{R:true,C:true,A:true,ans:null},s2:{picked:new Set()},s3:{j:4,ok:false},s4:{a:C.b0,b:M.B,c:C.F,ok:false},s5:{cs:null,used:[]}}}
+const st={step:0,done:[false,false,false,false,false,false,false],...fresh()};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&Array.isArray(s.done)){st.done=s.done.slice(0,7);st.step=Math.min(6,s.step||0)}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({done:st.done,step:st.step}))}catch(e){}}
+const toastEl=$('#toast');let toastT;
+function toast(msg,ms){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),ms||4200)}
+function fb(el,kind,html){el.className='fb show '+kind;el.innerHTML=html}
+
+/* ========== Narasi ========== */
+let narrText='';
+$('#btnNarr').onclick=()=>{
+  if(!('speechSynthesis' in window)){toast('Browser ini belum mendukung narasi suara.');return}
+  if(speechSynthesis.speaking){speechSynthesis.cancel();return}
+  const u=new SpeechSynthesisUtterance(narrText);u.lang='id-ID';
+  const v=speechSynthesis.getVoices().find(v=>(v.lang||'').toLowerCase().startsWith('id'));if(v)u.voice=v;speechSynthesis.speak(u);
+};
+
+/* ========== 3D ========== */
+const stage=$('#stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setClearColor(0x000000,0);
+stage.insertBefore(renderer.domElement,$('#labels'));
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,1,0.1,200);
+scene.add(new THREE.HemisphereLight(0xfff1dc,0x22335a,0.95));
+const dl=new THREE.DirectionalLight(0xffffff,0.75);dl.position.set(6,12,8);scene.add(dl);
+const world=new THREE.Group();scene.add(world);
+function kawungTexture(bg,fg,acc){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+  g.fillStyle=bg;g.fillRect(0,0,256,256);
+  for(let cx=0;cx<=256;cx+=128)for(let cy=0;cy<=256;cy+=128){
+    for(let k=0;k<4;k++){g.save();g.translate(cx,cy);g.rotate(Math.PI/4+k*Math.PI/2);
+      g.beginPath();g.ellipse(0,-34,22,34,0,0,Math.PI*2);g.fillStyle=fg;g.fill();
+      g.beginPath();g.ellipse(0,-34,9,18,0,0,Math.PI*2);g.fillStyle=acc;g.fill();
+      g.beginPath();g.arc(0,-34,3,0,Math.PI*2);g.fillStyle=fg;g.fill();g.restore();}
+    g.beginPath();g.arc(cx,cy,7,0,Math.PI*2);g.fillStyle=acc;g.fill();}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+const floorTex=kawungTexture('#E6D6B4','#6E3F1A','#C79A55');floorTex.repeat.set(6,3);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(13,6),new THREE.MeshBasicMaterial({map:floorTex,transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));
+floor.rotation.x=-Math.PI/2;scene.add(floor);
+scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(13,0.001,6)),new THREE.LineBasicMaterial({color:0xC79A55,transparent:true,opacity:.7})));
+const bannerTex=kawungTexture('#F1E4C6','#7A4A1E','#B8862F');
+
+let V={qMin:0,qMax:100,ys:1};
+const X=q=>((q-(V.qMin+V.qMax)/2)/(V.qMax-V.qMin))*12;
+const Y=v=>Math.max(-6.5,Math.min(7,v*V.ys));
+let pickables=[],labels=[];const labelLayer=$('#labels');
+function addLabel(text,pos,cls,onClick){const el=document.createElement(onClick?'button':'div');el.className='lbl '+(cls||'');el.textContent=text;
+  if(onClick){el.type='button';el.classList.add('info');el.onclick=onClick}labelLayer.appendChild(el);const L={el,pos:pos.clone()};labels.push(L);return L}
+function disposeObj(o){o.traverse(n=>{if(n.geometry)n.geometry.dispose();if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>m.dispose())})}
+function clearWorld(){for(const o of world.children.slice()){world.remove(o);disposeObj(o)}labels.forEach(l=>l.el.remove());labels=[];pickables=[];hideInfo()}
+function mat(color,o){o=o||{};return new THREE.MeshStandardMaterial({color,roughness:.45,metalness:.1,emissive:color,emissiveIntensity:o.glow??.25,transparent:(o.opacity??1)<1,opacity:o.opacity??1,depthWrite:(o.opacity??1)>=1})}
+function addCurve(fn,color,o){o=o||{};const pts=[],n=90;for(let i=0;i<=n;i++){const q=V.qMin+(V.qMax-V.qMin)*i/n;pts.push(new THREE.Vector3(X(q),Y(fn(q)),o.z||0))}
+  const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),220,o.r||0.08,10,false),mat(color,o));world.add(m);return m}
+function addSphere(q,v,color,data,r){const m=new THREE.Mesh(new THREE.SphereGeometry(r||.24,24,16),mat(color,{glow:.4}));m.position.set(X(q),Y(v),0);m.userData=data||{};world.add(m);return m}
+function addLine(a,b,color,op){const g=new THREE.BufferGeometry().setFromPoints([a,b]);const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:op??.6}));world.add(l);return l}
+function addArea(fTop,fBot,q0,q1,color){const pos=[],n=60;for(let i=0;i<n;i++){const a=q0+(q1-q0)*i/n,b=q0+(q1-q0)*(i+1)/n;
+  const p1=[X(a),Y(fBot(a)),0],p2=[X(a),Y(fTop(a)),0],p3=[X(b),Y(fBot(b)),0],p4=[X(b),Y(fTop(b)),0];pos.push(...p1,...p3,...p2,...p2,...p3,...p4)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.42,side:THREE.DoubleSide,depthWrite:false}));world.add(m);return m}
+function addAxes(qTicks,yTicks){
+  qTicks.forEach(q=>{addLine(new THREE.Vector3(X(q),0.01,2.9),new THREE.Vector3(X(q),0.01,3.15),0xF3CF85,.8);addLabel('q='+f2(q),new THREE.Vector3(X(q),0,3.45),'tick')});
+  const x0=-6.55;addLine(new THREE.Vector3(x0,Y(Math.min(...yTicks)),0),new THREE.Vector3(x0,Y(Math.max(...yTicks)),0),0xF3CF85,.55);
+  yTicks.forEach(v=>{addLine(new THREE.Vector3(x0-.12,Y(v),0),new THREE.Vector3(x0+.12,Y(v),0),0xF3CF85,.8);addLabel(shortRp(v),new THREE.Vector3(x0-.25,Y(v),0),'tick')})}
+function banner(q,fn){const v=fn(q),h=Math.abs(Y(v));const g=new THREE.Group();
+  if(h>0.02){const pl=new THREE.Mesh(new THREE.PlaneGeometry(.95,h),new THREE.MeshStandardMaterial({map:bannerTex,color:v>=0?0xBFEBDD:0xF2B3A5,side:THREE.DoubleSide,roughness:.8}));
+    bannerTex.repeat.set(1,Math.max(1,h/1.2));pl.position.set(X(q),Y(v)/2,0.02);g.add(pl)}
+  const s=new THREE.Mesh(new THREE.SphereGeometry(.26,24,16),mat(0xF3CF85,{glow:.6}));s.position.set(X(q),Y(v),0);g.add(s);world.add(g);return g}
+
+/* ---- Titik penjelasan (ⓘ) ---- */
+const infoCard=$('#infoCard');
+function showInfo(title,html){infoCard.querySelector('h3').textContent=title;infoCard.querySelector('.ib').innerHTML=html;infoCard.hidden=false}
+function hideInfo(){infoCard.hidden=true}
+$('#infoClose').onclick=hideInfo;
+function infoPoint(q,v,label,title,html,color){
+  const m=new THREE.Mesh(new THREE.OctahedronGeometry(.2),mat(color||0x9FE8FF,{glow:.7}));m.position.set(X(q),Y(v),0.05);world.add(m);
+  addLabel('ⓘ '+label,new THREE.Vector3(X(q),Y(v)+.55,0),'',()=>showInfo(title,html));return m}
+function infoLabel(text,pos,title,html,cls){return addLabel('ⓘ '+text,pos,cls,()=>showInfo(title,html))}
+const bepCalc=()=>`<div class="bepsteps">π(q) = 0 → −${f2(C.b0)}q² + ${f2(M.B)}q − ${f2(C.F)} = 0<br>⇔ ${f2(C.b0)}q² − ${f2(M.B)}q + ${f2(C.F)} = 0<br>q = [${f2(M.B)} ± √(${f2(M.B)}² − 4 · ${f2(C.b0)} · ${f2(C.F)})] ÷ (2 · ${f2(C.b0)})<br>q = [${f2(M.B)} ± √${f2(M.disc)}] ÷ ${f2(2*C.b0)} = [${f2(M.B)} ± ${f2(Math.sqrt(M.disc))}] ÷ ${f2(2*C.b0)}<br>q₁ = ${f2(M.q1)} dan q₂ = ${f2(M.q2)}</div>`;
+const INFO={
+  bep1:()=>{const lo=Math.max(0,M.q1-S());return['Titik impas pertama (BEP₁)',`<p><b>Arti:</b> BEP₁ adalah jumlah produksi minimal agar ${esc(C.nama)} tidak rugi. Pada q = <b>${f2(M.q1)}</b> ${esc(C.satuan)}, laba π(q) = 0.</p><p><b>Bukti R = C:</b> pendapatan R = ${rp(R(M.q1))} dan biaya total C = ${rp(Cost(M.q1))}. Harga jual saat itu ${rp(price(M.q1))} per ${esc(C.satuan)}.</p><p><b>Sebelum BEP₁:</b> misalnya pada q = ${f2(lo)}, laba ${rp(P(lo))}. Usaha rugi karena penjualan belum cukup menutup biaya tetap ${rp(C.F)}.</p><p><b>Sesudah BEP₁:</b> setiap tambahan produksi memperbesar laba sampai titik puncak q* = ${f2(M.qs)}.</p><p><b>Cara menghitung:</b></p>${bepCalc()}`]},
+  bep2:()=>{const hi=M.q2+S();return['Titik impas kedua (BEP₂)',`<p><b>Arti:</b> BEP₂ adalah batas atas produksi yang masih tidak rugi. Pada q = <b>${f2(M.q2)}</b> ${esc(C.satuan)}, laba kembali menjadi nol.</p><p><b>Bukti R = C:</b> pendapatan R = ${rp(R(M.q2))} dan biaya total C = ${rp(Cost(M.q2))}. Harga jual sudah turun ke ${rp(price(M.q2))} per ${esc(C.satuan)}.</p><p><b>Sesudah BEP₂:</b> misalnya pada q = ${f2(hi)}, laba ${rp(P(hi))}. ${esc(C.nama)} rugi lagi karena harga harus diturunkan terlalu jauh agar semua ${esc(C.produk)} laku.</p><p><b>Mengapa ada dua BEP?</b> Fungsi laba berbentuk parabola terbuka ke bawah, sehingga memotong garis laba nol di dua titik. Keduanya simetris terhadap titik puncak: ${f2(M.qs)} − ${f2(M.q1)} = ${f2(M.q2)} − ${f2(M.qs)} = ${f2(M.qs-M.q1)}.</p><p><b>Cara menghitung:</b></p>${bepCalc()}`]},
+  peak:()=>['Titik puncak laba',`<p>Laba maksimum <b>${rp(M.pmax)}</b> dicapai saat produksi q* = <b>${f2(M.qs)}</b> ${esc(C.satuan)}, dengan harga jual ${rp(price(M.qs))} per ${esc(C.satuan)}.</p><p>Titik ini tepat di tengah kedua BEP: (${f2(M.q1)} + ${f2(M.q2)}) ÷ 2 = ${f2(M.qs)}, karena parabola simetris terhadap sumbunya.</p><p class="ifx">q* = −b ÷ 2a = ${f2(M.B)} ÷ (2 × ${f2(C.b0)}) · π(q*) = (b² − 4ac) ÷ 4a</p>`],
+  untung:()=>['Zona untung',`<p>Bagian kurva di atas lantai kawung berarti π(q) &gt; 0. Ini terjadi untuk produksi antara ${f2(M.q1)} dan ${f2(M.q2)} ${esc(C.satuan)}.</p><p>Makin dekat ke titik puncak, makin besar laba yang diperoleh.</p>`],
+  rugi:()=>['Zona rugi',`<p>Bagian kurva di bawah lantai berarti π(q) &lt; 0. Di sisi kiri, rugi karena penjualan terlalu sedikit untuk menutup biaya tetap. Di sisi kanan, rugi karena harga harus turun terlalu jauh.</p>`],
+  lantai:()=>['Lantai kawung: garis laba nol',`<p>Lantai bermotif kawung mewakili π = 0. Titik di mana kurva menembus lantai adalah titik impas.</p><p>Motif kawung dipilih sebagai identitas batik Jawa yang melambangkan keseimbangan, sesuai makna titik impas.</p>`],
+  rpeak:()=>['Puncak pendapatan',`<p>Pendapatan maksimum <b>${rp(M.Rmax)}</b> dicapai pada q = ${f2(M.qR)} ${esc(C.satuan)} (q = harga maksimum ÷ 2 × penurunan harga).</p><p>Setelah titik ini, menambah produksi justru menurunkan pendapatan karena harga turun lebih cepat daripada jumlah yang terjual bertambah. Perhatikan: puncak pendapatan berbeda dengan puncak laba (q* = ${f2(M.qs)}), karena laba juga memperhitungkan biaya.</p>`],
+  fixed:()=>['Biaya tetap',`<p>Saat q = 0, biaya sudah sebesar <b>${rp(C.F)}</b>. Inilah biaya tetap, misalnya sewa tempat dan peralatan, yang harus dibayar walaupun tidak ada produksi.</p><p>Kemiringan garis biaya adalah biaya variabel ${rp(C.v)} per ${esc(C.satuan)}.</p>`],
+  r0:()=>['Harga turun menjadi nol',`<p>Pada q = ${f2(M.q0)} ${esc(C.satuan)}, harga p = ${f2(C.a0)} − ${f2(C.b0)}q menjadi nol, sehingga pendapatan juga nol.</p><p>Ini batas atas model: pasar tidak mau membayar untuk tambahan produksi di atas jumlah ini.</p>`],
+  area:()=>['Area laba',`<p>Area emas adalah selisih pendapatan dan biaya ketika R &gt; C. Tingginya di setiap q sama dengan laba π(q) = R(q) − C(q).</p><p>Area ini dimulai di BEP₁ dan berakhir di BEP₂.</p>`],
+};
+function revealProfitPoints(){const a=INFO.bep1(),b=INFO.bep2(),c=INFO.peak();
+  infoPoint(M.q1,0,'BEP '+f2(M.q1),a[0],a[1]);infoPoint(M.q2,0,'BEP '+f2(M.q2),b[0],b[1]);infoPoint(M.qs,M.pmax,'Puncak q = '+f2(M.qs),c[0],c[1],0xF3CF85)}
+
+// Orbit kamera
+const orb={theta:.55,phi:1.12,r:17,ty:.6,auto:false};
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function placeCam(){const s=Math.sin(orb.phi);camera.position.set(orb.r*s*Math.sin(orb.theta),orb.ty+orb.r*Math.cos(orb.phi),orb.r*s*Math.cos(orb.theta));camera.lookAt(0,orb.ty,0)}
+const ptrs=new Map();let downPos=null,moved=0,pinch0=0;const cv=renderer.domElement;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});downPos=1;moved=0;orb.auto=false;
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y)}});
+cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const p=ptrs.get(e.pointerId);const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0)orb.r=Math.max(7,Math.min(32,orb.r*pinch0/d));pinch0=d;return}
+  orb.theta-=dx*.008;orb.phi=Math.max(.25,Math.min(1.85,orb.phi-dy*.006))});
+cv.addEventListener('pointerup',e=>{if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;if(!ptrs.size&&moved<7&&downPos)pick(e)});
+cv.addEventListener('pointercancel',e=>ptrs.delete(e.pointerId));
+cv.addEventListener('wheel',e=>{e.preventDefault();orb.r=Math.max(7,Math.min(32,orb.r*(1+e.deltaY*.001)))},{passive:false});
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let onPick=null;
+function pick(e){if(!pickables.length)return;const r=cv.getBoundingClientRect();mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects(pickables)[0];if(hit&&onPick)onPick(hit.object)}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);resize();
+const tmp=new THREE.Vector3();let tick=0;
+(function loop(){requestAnimationFrame(loop);tick+=.016;if(orb.auto&&!reduce)orb.theta+=.0025;placeCam();
+  pickables.forEach(p=>{if(!p.userData.sel)p.scale.setScalar(reduce?1:1+Math.sin(tick*3+p.position.x)*.08);else p.scale.setScalar(1.25)});
+  renderer.render(scene,camera);const w=stage.clientWidth,h=stage.clientHeight;
+  labels.forEach(L=>{tmp.copy(L.pos).project(camera);if(tmp.z>1){L.el.style.display='none';return}L.el.style.display='';
+    L.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*h}px) translate(-50%,-50%)`})})();
+function hud(items){$('#hud').innerHTML=items.map(i=>`<span class="chip"><span class="dot" style="background:${i[1]}"></span>${i[0]}</span>`).join('')}
+
+/* ========== Mode AR ========== */
+let arStream=null;const video=$('#cam');
+$('#btnAR').onclick=async()=>{
+  if(arStream){arStream.getTracks().forEach(t=>t.stop());arStream=null;stage.classList.remove('ar');floor.material.opacity=.5;$('#btnAR').textContent='📷 Mode AR';return}
+  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('no');
+    arStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    video.srcObject=arStream;await video.play();stage.classList.add('ar');floor.material.opacity=.32;$('#btnAR').textContent='✕ Keluar AR';
+    toast('Mode AR aktif: arahkan kamera ke meja atau lantai, lalu geser layar untuk memutar grafik di ruang nyata.');
+  }catch(e){arStream=null;toast('Kamera tidak bisa dibuka di jendela ini. Buka tautan aplikasi langsung di browser HP lalu izinkan akses kamera.',6500)}
+};
+
+/* ========== Kapabilitas ========== */
+let sampleFn=null,db=null,user=null,canEditCfg=false;
+(async()=>{
+  if(!(window.claude&&typeof claude.use==='function')){$('#btnDosen').hidden=false;return}
+  const [s,d,u]=await Promise.all([claude.use('sample').catch(()=>null),claude.use('db').catch(()=>null),claude.use('user').catch(()=>null)]);
+  sampleFn=s;db=d;user=u;try{canEditCfg=user?await user.canEdit():false}catch(e){canEditCfg=false}
+  $('#btnDosen').hidden=!(canEditCfg||!db);
+  if(db){try{const snap=await db.doc('config/main').get();if(snap.exists){const c=normalize(snap.data());if(!validate(c).e.length){setConfig(c);render()}}}catch(e){}}
+  if(st.step===5)render();
+})();
+function setConfig(c){C=c;M=model(C);Object.assign(st,fresh())}
+const errCopy={not_granted:'Akses GenAI tidak diizinkan, jadi latihan memakai bank kasus bawaan.',rate_limited:'GenAI sedang sibuk. Tunggu sebentar lalu coba lagi.'};
+const BANK=[
+ {produk:'Tenun ikat',daerah:'Sumba, NTT',tokoh:'Mama Rambu',satuan:'lembar'},{produk:'Kopi arabika Gayo',daerah:'Aceh Tengah',tokoh:'Pak Teuku',satuan:'kg'},
+ {produk:'Keripik tempe',daerah:'Malang',tokoh:'Bu Ning',satuan:'bungkus'},{produk:'Songket',daerah:'Palembang',tokoh:'Cek Ida',satuan:'lembar'},
+ {produk:'Gerabah',daerah:'Kasongan, Bantul',tokoh:'Mbah Darmo',satuan:'buah'},{produk:'Rendang kemasan',daerah:'Padang',tokoh:'Uda Rizal',satuan:'kotak'},
+ {produk:'Ukiran kayu',daerah:'Jepara',tokoh:'Mas Hadi',satuan:'buah'},{produk:'Dodol',daerah:'Garut',tokoh:'Teh Euis',satuan:'kotak'}];
+const rnd=(a,b,s)=>a+s*Math.floor(Math.random()*((b-a)/s+1));
+function finishCase(o,src){let a=Math.round(+o.a);if(!(a>=1&&a<=5))a=2;let h=Math.round((+o.h)/5)*5;if(!(h>=20&&h<=200))h=rnd(30,120,5);
+  let d=Math.round((+o.d)/5)*5;if(!(d>=5&&d<h))d=Math.max(5,Math.min(h-5,rnd(10,h-10,5)));
+  return{produk:String(o.produk||'Produk lokal').slice(0,60),daerah:String(o.daerah||'Indonesia').slice(0,60),tokoh:String(o.tokoh||'Pelaku UMKM').slice(0,40),satuan:String(o.satuan||'unit').slice(0,20),
+    cerita:String(o.cerita||'').slice(0,500),tanya:String(o.pertanyaan_tambahan||'').slice(0,240),a,h,d,b:2*a*h,c:a*(h*h-d*d),src}}
+function localCase(){const pool=BANK.filter(x=>!st.s5.used.includes(x.produk));const base=(pool.length?pool:BANK)[Math.floor(Math.random()*(pool.length||BANK.length))];
+  const a=rnd(1,3,1),h=rnd(30,120,5),d=rnd(10,h-10,5);
+  return finishCase({...base,a,h,d,cerita:`${base.tokoh} menjual ${base.produk.toLowerCase()} khas ${base.daerah}. Dari catatan penjualan setahun, laba bulanannya (dalam ribu rupiah) mengikuti fungsi kuadrat terhadap banyaknya ${base.satuan} yang diproduksi.`,
+    pertanyaan_tambahan:`Jika permintaan pasar hanya ${h-Math.round(d/2/5)*5} ${base.satuan} per bulan, apa saran Anda untuk ${base.tokoh}?`},'bank')}
+async function aiCase(){
+  const prompt=`Kamu perancang soal Matematika Bisnis untuk mahasiswa Indonesia, materi fungsi kuadrat (fungsi laba).
+Buat SATU kasus baru bertema UMKM produk kearifan lokal Indonesia. Pilih satu daerah dan produk khasnya secara acak (kode acak: ${Math.random().toString(36).slice(2,8)}). Jangan pakai produk ini: ${st.s5.used.join(', ')||'-'}.
+${C.aiKonteks?'Arahan dari dosen (ikuti selama tidak bertentangan dengan format): '+C.aiKonteks+'\n':''}Balas HANYA dengan objek JSON tanpa teks lain, dengan kunci:
+"produk", "daerah" (kabupaten/kota, provinsi), "tokoh" (nama pelaku usaha yang khas daerah itu), "satuan",
+"cerita" (2–3 kalimat, maks 60 kata, konteks usaha yang hidup dan akurat secara budaya; jangan sebut angka),
+"a" (bilangan bulat 1–5), "h" (kelipatan 5 antara 20 dan 200: jumlah produksi optimal), "d" (kelipatan 5, minimal 5 dan kurang dari h: jarak titik optimal ke titik impas),
+"pertanyaan_tambahan" (satu pertanyaan reflektif singkat yang mengaitkan hasil hitungan dengan keputusan bisnis tokoh itu).`;
+  return finishCase(await sampleFn.json(prompt,{modelTier:'quick',cache:false}),'ai')}
+
+/* ========== Tahapan ========== */
+const STEPS=[{t:'Kenalan',m:1},{t:'Jelajah 3D',m:3},{t:'Titik impas',m:4},{t:'Laba maksimum',m:4},{t:'Lab koefisien',m:3},{t:'Latihan GenAI',m:4},{t:'Rangkuman',m:0}];
+function renderSteps(){$('#steps').innerHTML=STEPS.map((s,i)=>`<button type="button" class="step${st.done[i]?' done':''}" ${i===st.step?'aria-current="step"':''} data-i="${i}"><b>${i+1}. ${s.t}</b><span>${s.m?s.m+' menit':'selesai'}</span></button>`).join('');
+  $('#steps').querySelectorAll('.step').forEach(b=>b.onclick=()=>go(+b.dataset.i))}
+function go(i){st.step=i;save();if('speechSynthesis' in window)speechSynthesis.cancel();render();$('#content').scrollTop=0}
+function markDone(i){st.done[i]=true;save();renderSteps()}
+function navHTML(){const i=st.step;return `<div class="nav">${i>0?'<button class="btn" id="prev" type="button">Kembali</button>':'<span></span>'}${i<6?`<button class="btn primary" id="next" type="button">${i===0?'Mulai menjelajah':'Lanjut'}</button>`:''}</div>`}
+function bindNav(){const p=$('#prev'),n=$('#next');if(p)p.onclick=()=>go(st.step-1);if(n)n.onclick=()=>{if(st.step===0)markDone(0);go(st.step+1)}}
+function render(){$('#brandName').textContent=C.judul;document.title=C.judul+': Lab 3D Fungsi Kuadrat';renderSteps();clearWorld();onPick=null;orb.auto=false;[s0,s1,s2,s3,s4,s5,s6][st.step]();bindNav()}
+const INFOHINT='<p class="meta">Sentuh label bertanda ⓘ di grafik untuk membaca penjelasan setiap titik.</p>';
+function viewRC(){const qMax=M.q0;V={qMin:0,qMax,ys:Math.min(5.6/M.Rmax,6.5/Cost(qMax))}}
+function viewProfit(extraLo,extraHi){const s=S();V={qMin:M.q1-1.5*s,qMax:M.q2+1.5*s,ys:4/M.pmax};
+  if(extraLo!==undefined){V.qMin=Math.min(V.qMin,extraLo);V.qMax=Math.max(V.qMax,extraHi)}}
+function profitAxes(){addAxes(ticks(V.qMin,V.qMax),[Math.round(P(V.qMin)/100)*100,0,M.pmax])}
+function zoneLabels(){const u=INFO.untung(),r=INFO.rugi(),l=INFO.lantai();
+  infoLabel('Zona untung',new THREE.Vector3(X(M.qs),Y(M.pmax)+1.2,0),u[0],u[1],'green');
+  infoLabel('Zona rugi',new THREE.Vector3(X(V.qMin+S()*.4),Y(P(V.qMin+S()*.4))-.6,0),r[0],r[1],'red');
+  infoLabel('Lantai π = 0',new THREE.Vector3(X(V.qMax)-0.6,0.15,2.4),l[0],l[1])}
+
+/* --- 0 --- */
+function s0(){
+  narrText=`Selamat datang di lab ${C.judul}. ${C.nama} adalah ${C.profil}. Berapa ${C.satuan} ${C.produk} yang sebaiknya dibuat setiap bulan agar labanya paling besar, dan kapan usahanya mulai untung? Di aplikasi ini kamu akan menjawabnya dengan fungsi kuadrat yang bisa kamu putar, sentuh, dan ubah dalam tiga dimensi.`;
+  $('#content').innerHTML=`<h2>${esc(C.nama)} dan ${esc(C.produk)}nya</h2><p class="meta">Tahap 1 dari 7 · sekitar 1 menit</p>
+  <div class="story"><p>${esc(C.nama)} adalah ${esc(C.profil)}. Semakin banyak ${esc(C.produk)} yang dibuat, harganya harus semakin murah agar laku, sementara biaya bahan dan upah terus bertambah.</p>
+  <p>Pertanyaannya: <strong>berapa ${esc(C.satuan)} per bulan yang membuat labanya paling besar, dan kapan usahanya mulai untung?</strong></p></div>
+  <p>Catatan usaha ${esc(C.nama)} (q = ${esc(C.satuan)} per bulan, uang dalam ribu rupiah):</p>
+  <div class="eq">Harga jual: p = ${f2(C.a0)} − ${f2(C.b0)}q</div><div class="eq">Biaya total: C(q) = ${f2(C.F)} + ${f2(C.v)}q</div>
+  <div class="task"><h3>Setelah 19 menit kamu bisa</h3><ul class="clean"><li>menyusun fungsi pendapatan dan laba berbentuk kuadrat,</li><li>menemukan titik impas (BEP) sebagai akar fungsi laba,</li><li>menentukan produksi optimal dari titik puncak parabola,</li><li>membaca pengaruh koefisien a, b, c terhadap keputusan bisnis.</li></ul></div>
+  <p class="meta">Tips: tekan 🔊 Narasi untuk mendengar penjelasan, 📷 Mode AR untuk menaruh grafik di ruang nyata, dan sentuh label ⓘ di grafik untuk penjelasan setiap titik.</p>${navHTML()}`;
+  viewRC();orb.auto=true;addCurve(R,0x5DBBA5);addCurve(Cost,0xE7826A);addArea(R,Cost,M.q1,M.q2,0xE2B260);
+  const a=INFO.area();infoLabel('Area laba',new THREE.Vector3(X(M.qs),Y((R(M.qs)+Cost(M.qs))/2),0),a[0],a[1],'gold');
+  hud([['Pendapatan','#5DBBA5'],['Biaya','#E7826A'],['Laba','#E2B260']]);
+}
+/* --- 1 --- */
+let s1obj={};
+function s1(){
+  narrText=`Tahap jelajah tiga dimensi. Pendapatan adalah harga dikali jumlah. Kurva hijau adalah pendapatan, garis merah adalah biaya, dan area emas di antara keduanya adalah laba. Sentuh label bertanda i untuk membaca penjelasan setiap titik, lalu jawab: pada rentang produksi berapa ${C.nama} untung?`;
+  const opts=[`0 sampai ${f2(M.q1)} ${C.satuan}`,`${f2(M.q1)} sampai ${f2(M.q2)} ${C.satuan}`,`${f2(M.qs)} sampai ${f2(M.q0)} ${C.satuan}`];
+  $('#content').innerHTML=`<h2>Pendapatan, biaya, dan area laba</h2><p class="meta">Tahap 2 dari 7 · sekitar 3 menit</p>
+  <p>Pendapatan adalah harga × jumlah, sehingga hasilnya fungsi kuadrat:</p>
+  <div class="eq">R(q) = p · q = (${f2(C.a0)} − ${f2(C.b0)}q)q = ${f2(C.a0)}q − ${f2(C.b0)}q²</div>
+  <p>Putar grafik di kiri. Kurva hijau melengkung karena koefisien q² negatif, sedangkan biaya merah berupa garis lurus.</p>${INFOHINT}
+  <div class="task"><h3>Tampilkan atau sembunyikan</h3>
+  <label class="tog"><input type="checkbox" id="tR" ${st.s1.R?'checked':''}> Pendapatan R(q)</label>
+  <label class="tog"><input type="checkbox" id="tC" ${st.s1.C?'checked':''}> Biaya C(q)</label>
+  <label class="tog"><input type="checkbox" id="tA" ${st.s1.A?'checked':''}> Area laba (R lebih besar dari C)</label></div>
+  <div class="task"><h3>Keputusan: pada rentang produksi berapa ${esc(C.nama)} untung?</h3>
+  <div class="row" id="mc">${opts.map((t,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="${st.s1.ans===i}">${esc(t)}</button>`).join('')}</div><div class="fb" id="fb1"></div></div>${navHTML()}`;
+  viewRC();
+  s1obj.R=addCurve(R,0x5DBBA5);s1obj.C=addCurve(Cost,0xE7826A);s1obj.A=addArea(R,Cost,M.q1,M.q2,0xE2B260);
+  s1obj.lR=addLabel(`R(q) = ${f2(C.a0)}q − ${f2(C.b0)}q²`,new THREE.Vector3(X(M.qR*0.55),Y(R(M.qR*0.55))+.6,0),'green');
+  s1obj.lC=addLabel(`C(q) = ${f2(C.F)} + ${f2(C.v)}q`,new THREE.Vector3(X(M.q0*0.88),Y(Cost(M.q0*0.88))+.5,0),'red');
+  const ia=INFO.area();s1obj.lA=infoLabel('Area laba',new THREE.Vector3(X(M.qs),Y((R(M.qs)+Cost(M.qs))/2),0),ia[0],ia[1],'gold');
+  const rp_=INFO.rpeak(),fx=INFO.fixed(),r0=INFO.r0();
+  infoPoint(M.qR,M.Rmax,'Puncak pendapatan',rp_[0],rp_[1],0x8FE0C8);infoPoint(0,C.F,'Biaya tetap',fx[0],fx[1],0xFFB4A1);infoPoint(M.q0,0,'Harga = 0',r0[0],r0[1],0x8FE0C8);
+  const revealBep=()=>{const b1=INFO.bep1(),b2=INFO.bep2();infoPoint(M.q1,R(M.q1),'BEP '+f2(M.q1),b1[0],b1[1]);infoPoint(M.q2,R(M.q2),'BEP '+f2(M.q2),b2[0],b2[1])};
+  addAxes(ticks(0,M.q0),[0,...ticks(0,Math.max(M.Rmax,Cost(M.q0))).slice(1,4)]);
+  hud([['Pendapatan','#5DBBA5'],['Biaya','#E7826A'],['Laba','#E2B260'],['ⓘ Titik penjelasan','#9FE8FF']]);
+  const sync=()=>{['R','C','A'].forEach(k=>{s1obj[k].visible=st.s1[k];s1obj['l'+k].el.hidden=!st.s1[k]})};sync();
+  ['R','C','A'].forEach(k=>{$('#t'+k).onchange=e=>{st.s1[k]=e.target.checked;sync()}});
+  const f=$('#fb1');let shown=false;
+  $('#mc').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{st.s1.ans=+b.dataset.i;$('#mc').querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    if(st.s1.ans===1){fb(f,'ok',`<strong>Tepat.</strong> Area emas hanya muncul saat kurva pendapatan berada di atas garis biaya, yaitu antara ${f2(M.q1)} dan ${f2(M.q2)} ${esc(C.satuan)}. Kedua titik potong sekarang ditandai ⓘ. Di tahap berikutnya kamu akan membuktikannya secara aljabar.`);markDone(1);if(!shown){revealBep();shown=true}}
+    else fb(f,'bad','Belum tepat. Sembunyikan kurva pendapatan dan biaya, sisakan area laba saja, lalu putar grafik dari depan. Lihat di q berapa area emas mulai dan berakhir.')});
+  if(st.s1.ans!==null){const b=$('#mc').querySelector(`[data-i="${st.s1.ans}"]`);if(b)b.click()}
+}
+/* --- 2 --- */
+function s2(){
+  narrText=`Titik interaksi pertama: titik impas. Fungsi laba adalah pendapatan dikurangi biaya. Lantai batik adalah garis laba nol. Di atas lantai berarti untung, di bawah lantai berarti rugi. Sentuh dua bola tempat kurva menembus lantai, lalu periksa jawabanmu.`;
+  $('#content').innerHTML=`<h2>Di mana kurva laba menembus lantai?</h2><p class="meta">Tahap 3 dari 7 · titik interaksi 1 · sekitar 4 menit</p>
+  <div class="eq">π(q) = R(q) − C(q) = ${coefStr(C.b0,M.B,C.F).slice(7)}</div>
+  <p>Lantai motif kawung adalah garis <strong>π = 0</strong>. Bagian kurva di atas lantai berarti untung, di bawah lantai berarti rugi. Titik yang tepat berada di lantai disebut <strong>titik impas (BEP)</strong>.</p>${INFOHINT}
+  <details class="concept"><summary>Apa itu titik impas (BEP)?</summary>
+  <p><b>Definisi.</b> Titik impas (break-even point) adalah jumlah produksi ketika pendapatan sama dengan biaya total, sehingga laba nol: R(q) = C(q) atau π(q) = 0.</p>
+  <p><b>Mengapa bisa dua?</b> Pada fungsi laba linear hanya ada satu BEP. Pada fungsi laba kuadrat bisa ada dua, karena harga turun saat produksi bertambah. BEP₁ menandai kapan usaha mulai untung, sedangkan BEP₂ menandai kapan usaha kembali rugi.</p>
+  <p><b>Cara mencari.</b> Samakan π(q) dengan nol, lalu selesaikan dengan pemfaktoran atau rumus abc: q = [−b ± √(b² − 4ac)] ÷ 2a. Diskriminan b² − 4ac harus positif agar ada dua BEP.</p>
+  <p><b>Di grafik 3D.</b> BEP adalah titik tempat kurva laba menembus lantai kawung. Di antara kedua BEP terdapat zona untung; di luar keduanya zona rugi.</p>
+  <p><b>Makna bisnis.</b> BEP membantu pelaku usaha menentukan target produksi minimal, dan bagi analis kredit menunjukkan seberapa jauh usaha aman dari kerugian.</p></details>
+  <div class="task"><h3>Sentuh dua bola yang merupakan titik impas</h3><p class="meta" id="picked">Belum ada bola yang dipilih.</p>
+  <div class="row"><button class="btn primary" id="chk2" type="button">Periksa pilihan</button><button class="btn" id="hint2" type="button">Lihat petunjuk aljabar</button><button class="btn" id="rst2" type="button">Hapus pilihan</button></div>
+  <div class="fb" id="fb2"></div></div>${navHTML()}`;
+  viewProfit();addCurve(P,0xE2B260,{r:.09});profitAxes();zoneLabels();
+  const balls=[];for(let k=-1;k<=7;k++){const q=M.q1+k*S();const b=addSphere(q,P(q),0x9FD3FF,{k,q});balls.push(b);pickables.push(b)}
+  const paint=()=>{balls.forEach(b=>{b.userData.sel=st.s2.picked.has(b.userData.k);const c=b.userData.sel?0xF3CF85:0x9FD3FF;b.material.color.set(c);b.material.emissive.set(c)});
+    const arr=[...st.s2.picked].sort((a,b)=>a-b).map(k=>M.q1+k*S());$('#picked').textContent=arr.length?'Dipilih: '+arr.map(q=>'q = '+f2(q)+' (π = '+shortRp(P(q))+')').join(', '):'Belum ada bola yang dipilih.'};
+  onPick=o=>{const k=o.userData.k;if(st.s2.picked.has(k))st.s2.picked.delete(k);else{if(st.s2.picked.size>=2){toast('Pilih maksimal dua bola. Sentuh bola terpilih untuk membatalkannya.');return}st.s2.picked.add(k)}paint()};
+  paint();hud([['Laba π(q)','#E2B260'],['Bola calon BEP','#9FD3FF'],['ⓘ Titik penjelasan','#9FE8FF']]);
+  const f=$('#fb2');let shown=false;
+  $('#rst2').onclick=()=>{st.s2.picked.clear();paint();f.className='fb'};
+  $('#hint2').onclick=()=>fb(f,'info',`Samakan laba dengan nol: −${f2(C.b0)}q² + ${f2(M.B)}q − ${f2(C.F)} = 0. Bagi kedua ruas dengan −${f2(C.b0)} sehingga q² − ${f2(M.B/C.b0)}q + ${f2(C.F/C.b0)} = 0. Cari dua bilangan yang hasil kalinya ${f2(C.F/C.b0)} dan jumlahnya ${f2(M.B/C.b0)}, atau gunakan rumus abc.`);
+  const ok=()=>{fb(f,'ok',`<strong>Benar, BEP ada di ${f2(M.q1)} dan ${f2(M.q2)} ${esc(C.satuan)}.</strong> Berikut penyelesaian lengkapnya:${bepCalc()}Pemeriksaan: pada q = ${f2(M.q1)}, R = ${rp(R(M.q1))} dan C = ${rp(Cost(M.q1))}; pada q = ${f2(M.q2)}, R = ${rp(R(M.q2))} dan C = ${rp(Cost(M.q2))}. Karena R = C, laba di kedua titik nol. Artinya ${esc(C.nama)} untung jika memproduksi di antara ${f2(M.q1)} dan ${f2(M.q2)} ${esc(C.satuan)}. Sentuh label ⓘ di kedua titik untuk penjelasan lengkap.`);
+    if(!shown){const b1=INFO.bep1(),b2=INFO.bep2();infoPoint(M.q1,0,'BEP '+f2(M.q1),b1[0],b1[1]);infoPoint(M.q2,0,'BEP '+f2(M.q2),b2[0],b2[1]);shown=true}markDone(2)};
+  $('#chk2').onclick=()=>{const a=[...st.s2.picked].sort((x,y)=>x-y);
+    if(a.length<2){fb(f,'bad','Pilih dua bola dulu. Parabola laba memotong lantai di dua tempat.');return}
+    if(a[0]===0&&a[1]===6)ok();
+    else{const bad=a.filter(k=>k!==0&&k!==6).map(k=>M.q1+k*S());fb(f,'bad',`Belum tepat. Pada ${bad.map(q=>'q = '+f2(q)).join(' dan ')} labanya ${bad.map(q=>shortRp(P(q))).join(' dan ')}, bukan nol. Putar grafik dari samping dan cari bola yang tepat menempel di lantai.`)}};
+  if(st.done[2]){st.s2.picked=new Set([0,6]);paint();ok()}
+}
+/* --- 3 --- */
+let ban=null;
+function s3(){
+  narrText=`Titik interaksi kedua: keputusan produksi. Geser jumlah produksi dan perhatikan kain batik yang tergantung dari kurva. Kain hijau berarti untung, kain merah berarti rugi. Tinggi kain menunjukkan besar laba. Pilih jumlah produksi yang paling menguntungkan, lalu kunci keputusanmu.`;
+  $('#content').innerHTML=`<h2>Berapa ${esc(C.satuan)} yang paling menguntungkan?</h2><p class="meta">Tahap 4 dari 7 · titik interaksi 2 · sekitar 4 menit</p>
+  <p>Geser jumlah produksi. Kain batik di grafik menggantung dari kurva ke lantai: <strong>hijau</strong> berarti untung, <strong>merah</strong> berarti rugi, dan tingginya sebesar laba.</p>${INFOHINT}
+  <div class="task"><div class="slider"><div class="top"><span>Produksi q</span><span id="qv"></span></div>
+  <input type="range" id="q3" min="0" max="18" step="1" value="${st.s3.j}" aria-label="Jumlah produksi per bulan"></div>
+  <div class="stats"><div class="stat"><span>Harga per ${esc(C.satuan)}</span><b id="sp"></b></div><div class="stat"><span>Pendapatan R(q)</span><b id="sr"></b></div>
+  <div class="stat"><span>Biaya C(q)</span><b id="sc"></b></div><div class="stat"><span>Laba π(q)</span><b id="sl"></b></div></div>
+  <div class="row"><button class="btn primary" id="lock3" type="button">Kunci keputusan</button></div><div class="fb" id="fb3"></div></div>${navHTML()}`;
+  viewProfit();addCurve(P,0xE2B260,{r:.09});profitAxes();zoneLabels();
+  if(st.done[2]){const b1=INFO.bep1(),b2=INFO.bep2();infoPoint(M.q1,0,'BEP '+f2(M.q1),b1[0],b1[1]);infoPoint(M.q2,0,'BEP '+f2(M.q2),b2[0],b2[1])}
+  const upd=()=>{const q=pq(st.s3.j);if(ban){world.remove(ban);disposeObj(ban)}ban=banner(q,P);
+    $('#qv').textContent=f2(q)+' '+C.satuan;$('#sp').textContent=rp(price(q));$('#sr').textContent=rp(R(q));$('#sc').textContent=rp(Cost(q));
+    const l=$('#sl');l.textContent=rp(P(q));l.style.color=P(q)>=0?'var(--tarum)':'var(--mengkudu)'};
+  ban=null;upd();$('#q3').oninput=e=>{st.s3.j=+e.target.value;upd()};
+  hud([['Laba π(q)','#E2B260'],['Kain batik = besar laba','#BFEBDD'],['ⓘ Titik penjelasan','#9FE8FF']]);
+  const f=$('#fb3');let shown=false;
+  const ok=()=>{fb(f,'ok',`<strong>Keputusan tepat: ${f2(M.qs)} ${esc(C.satuan)} per bulan.</strong> Ini titik puncak parabola:<div class="eq" style="margin-top:8px">q* = −b / 2a = −${f2(M.B)} / (2 · −${f2(C.b0)}) = ${f2(M.qs)}</div>Harga jualnya ${rp(price(M.qs))} per ${esc(C.satuan)} dan laba maksimumnya ${rp(M.pmax)}. Sentuh label ⓘ di puncak untuk penjelasan lengkap.`);
+    if(!shown){const c=INFO.peak();infoPoint(M.qs,M.pmax,'Puncak q = '+f2(M.qs),c[0],c[1],0xF3CF85);shown=true}markDone(3)};
+  $('#lock3').onclick=()=>{const j=st.s3.j,q=pq(j);if(j===9)ok();
+    else fb(f,'bad',`Labamu di ${f2(q)} ${esc(C.satuan)} adalah ${rp(P(q))}. Masih bisa lebih tinggi dengan ${j<9?'menambah':'mengurangi'} produksi. Petunjuk: sumbu simetri parabola ada di tengah-tengah kedua titik impas.`)};
+  if(st.done[3]){st.s3.j=9;$('#q3').value=9;upd();ok()}
+}
+/* --- 4 --- */
+let s4curve=null;
+function s4(){
+  const s=st.s4,turunF=C.dF<0,naikV=C.dv>0;
+  narrText=`Titik interaksi ketiga: laboratorium koefisien. ${C.nama} ${C.labDesc}. Biaya tetap ${C.dF<0?'turun':'naik'} dan biaya per unit ${C.dv>0?'naik':(C.dv<0?'turun':'tetap')}. Ubah koefisien a, b, dan c sampai kurva emas menempel pada kurva bayangan putih.`;
+  const fStr=C.dF===0?'Biaya tetap tidak berubah':`Biaya tetap ${turunF?'turun':'naik'} ${rp(Math.abs(C.dF))}`;
+  const vStr=C.dv===0?'biaya per '+esc(C.satuan)+' tidak berubah':`biaya per ${esc(C.satuan)} ${naikV?'naik':'turun'} ${rp(Math.abs(C.dv))}`;
+  const stepA=pickStep([C.b0],[0.5,0.25,0.1,0.05,0.01]),stepB=pickStep([M.B,M.B2],[20,10,5,2,1,0.5,0.1,0.01]),stepC=pickStep([C.F,M.F2],[500,200,100,50,20,10,5,1,0.1]);
+  const aMin=Math.max(stepA,C.b0-4*stepA),aMax=C.b0+4*stepA,bMin=Math.min(M.B,M.B2)-6*stepB,bMax=Math.max(M.B,M.B2)+6*stepB,cMin=Math.max(stepC,Math.min(C.F,M.F2)-8*stepC),cMax=Math.max(C.F,M.F2)+8*stepC;
+  $('#content').innerHTML=`<h2>${esc(C.nama)} mengubah cara berjualan</h2><p class="meta">Tahap 5 dari 7 · titik interaksi 3 · sekitar 3 menit</p>
+  <div class="story"><p>${esc(C.nama)} ${esc(C.labDesc)}. <strong>${fStr}</strong>, dan <strong>${vStr}</strong>. Harga jual tidak berubah.</p></div>
+  <p>Ubah koefisien sampai kurva emasmu menempel pada kurva bayangan putih (fungsi laba yang baru).</p><div class="eq" id="eq4"></div>
+  <div class="task">
+  <div class="slider"><div class="top"><span>a (kelengkungan)</span><span id="va"></span></div><input type="range" id="sa" min="${aMin}" max="${aMax}" step="${stepA}" value="${s.a}" aria-label="Koefisien a"></div>
+  <div class="slider"><div class="top"><span>b (pengaruh tiap ${esc(C.satuan)})</span><span id="vb"></span></div><input type="range" id="sb" min="${bMin}" max="${bMax}" step="${stepB}" value="${s.b}" aria-label="Koefisien b"></div>
+  <div class="slider"><div class="top"><span>c (biaya tetap)</span><span id="vc"></span></div><input type="range" id="sc4" min="${cMin}" max="${cMax}" step="${stepC}" value="${s.c}" aria-label="Koefisien c"></div>
+  <div class="row"><button class="btn primary" id="chk4" type="button">Periksa fungsi baru</button><button class="btn" id="hint4" type="button">Petunjuk</button></div><div class="fb" id="fb4"></div></div>${navHTML()}`;
+  const s_=S();viewProfit(Math.min(M.t1,M.q1)-1.2*s_,Math.max(M.t2,M.q2)+1.2*s_);V.ys=4/Math.max(M.pmax,M.tmax);
+  addCurve(T,0xffffff,{r:.14,opacity:.3,glow:.6});addLabel('Target: laba setelah perubahan',new THREE.Vector3(X(M.ts),Y(M.tmax)+1.1,0),'');
+  addAxes(ticks(V.qMin,V.qMax),[Math.round(Math.min(P(V.qMin),T(V.qMin),T(V.qMax))/100)*100,0,Math.max(M.pmax,M.tmax)]);
+  const fn=()=>q=>-s.a*q*q+s.b*q-s.c;
+  const upd=()=>{if(s4curve){world.remove(s4curve);disposeObj(s4curve)}s4curve=addCurve(fn(),0xE2B260,{r:.08});
+    $('#va').textContent='−'+f2(s.a);$('#vb').textContent=f2(s.b);$('#vc').textContent=f2(s.c);$('#eq4').textContent=coefStr(s.a,s.b,s.c)};
+  s4curve=null;upd();
+  $('#sa').oninput=e=>{s.a=+e.target.value;upd()};$('#sb').oninput=e=>{s.b=+e.target.value;upd()};$('#sc4').oninput=e=>{s.c=+e.target.value;upd()};
+  hud([['Fungsimu','#E2B260'],['Target','#ffffff']]);
+  const f=$('#fb4'),eq=(x,y)=>Math.abs(x-y)<1e-6;let shown=false;
+  $('#hint4').onclick=()=>fb(f,'info',`Harga jual tetap, jadi koefisien q² (a) tidak berubah. Koefisien b = harga maksimum − biaya per ${esc(C.satuan)} = ${f2(C.a0)} − (${f2(C.v)} ${C.dv>=0?'+':'−'} ${f2(Math.abs(C.dv))}). Koefisien c = biaya tetap = ${f2(C.F)} ${C.dF>=0?'+':'−'} ${f2(Math.abs(C.dF))}.`);
+  const ok=()=>{const moved=!eq(M.ts,M.qs);
+    fb(f,'ok',`<strong>Fungsi baru: ${coefStr(C.b0,M.B2,M.F2)}.</strong> Puncaknya ${moved?'pindah ke':'tetap di'} q* = <strong>${f2(M.ts)} ${esc(C.satuan)}</strong> dengan laba maksimum ${rp(M.tmax)} (sebelumnya ${rp(M.pmax)}), dan BEP bergeser ke ${f2(M.t1)} dan ${f2(M.t2)}. Pelajaran bisnisnya: biaya per unit (b) menggeser jumlah produksi optimal, sedangkan biaya tetap (c) hanya menaikkan atau menurunkan seluruh kurva tanpa mengubah letak puncaknya.`);
+    if(!shown){const cP=['Titik puncak baru',`<p>Setelah perubahan, laba maksimum ${rp(M.tmax)} dicapai pada q* = ${f2(M.ts)} ${esc(C.satuan)}.</p><p>${moved?`Puncak bergeser ${M.ts<M.qs?'ke kiri':'ke kanan'} sejauh ${f2(Math.abs(M.ts-M.qs))} karena biaya per ${esc(C.satuan)} berubah sehingga b berubah.`:'Letak puncak tidak berubah karena biaya per unit tetap; yang berubah hanya tinggi kurva.'}</p>`];
+      const b1=['Titik impas baru (BEP₁)',`<p>Dengan biaya baru, ${esc(C.nama)} mulai untung setelah memproduksi ${f2(M.t1)} ${esc(C.satuan)} (sebelumnya ${f2(M.q1)}).</p>`];
+      const b2=['Titik impas baru (BEP₂)',`<p>Batas atas produksi yang masih menguntungkan menjadi ${f2(M.t2)} ${esc(C.satuan)} (sebelumnya ${f2(M.q2)}).</p>`];
+      infoPoint(M.ts,M.tmax,'Puncak baru',cP[0],cP[1],0xF3CF85);infoPoint(M.t1,0,'BEP '+f2(M.t1),b1[0],b1[1]);infoPoint(M.t2,0,'BEP '+f2(M.t2),b2[0],b2[1]);shown=true}
+    s.ok=true;markDone(4)};
+  $('#chk4').onclick=()=>{const tips=[];
+    if(!eq(s.a,C.b0))tips.push(`a sebaiknya ${s.a>C.b0?'diperkecil':'diperbesar'} (harga jual tidak berubah)`);
+    if(!eq(s.b,M.B2))tips.push(`b ${s.b>M.B2?'terlalu besar':'terlalu kecil'}`);
+    if(!eq(s.c,M.F2))tips.push(`c ${s.c>M.F2?'terlalu besar':'terlalu kecil'}`);
+    if(!tips.length)ok();else fb(f,'bad','Belum menempel: '+tips.join('; ')+'.')};
+  if(st.done[4]){Object.assign(s,{a:C.b0,b:M.B2,c:M.F2});['sa','sb','sc4'].forEach((id,i)=>$('#'+id).value=[s.a,s.b,s.c][i]);upd();ok()}
+}
+/* --- 5 --- */
+function drawCase(cs,reveal){clearWorld();
+  const lo=Math.max(0,cs.h-1.4*cs.d),hi=cs.h+1.4*cs.d;V={qMin:lo,qMax:hi,ys:4/(cs.a*cs.d*cs.d)};
+  const f=q=>-cs.a*q*q+cs.b*q-cs.c;addCurve(f,0xE2B260,{r:.09});
+  addAxes(ticks(lo,hi),[f(lo)<0?Math.round(f(lo)/100)*100:0,0,cs.a*cs.d*cs.d]);
+  if(reveal){
+    infoPoint(cs.h,cs.a*cs.d*cs.d,'Puncak q = '+cs.h,'Titik puncak laba',`<p>Laba maksimum ${rp(cs.a*cs.d*cs.d)} dicapai saat ${esc(cs.tokoh)} memproduksi ${cs.h} ${esc(cs.satuan)}.</p><p class="ifx">q* = −b ÷ 2a = ${fmt(cs.b)} ÷ ${2*cs.a} = ${cs.h}</p>`,0xF3CF85);
+    infoPoint(cs.h-cs.d,0,'BEP '+(cs.h-cs.d),'Titik impas pertama',`<p>Di bawah ${cs.h-cs.d} ${esc(cs.satuan)}, penjualan belum menutup biaya tetap ${rp(cs.c)}.</p>`);
+    infoPoint(cs.h+cs.d,0,'BEP '+(cs.h+cs.d),'Titik impas kedua',`<p>Di atas ${cs.h+cs.d} ${esc(cs.satuan)}, ${esc(cs.tokoh)} kembali rugi karena harga harus turun terlalu jauh.</p>`)}
+  hud([['Laba π(q) kasus '+cs.produk,'#E2B260']])}
+function s5(){
+  narrText='Latihan dengan kecerdasan buatan generatif. Tekan tombol buat kasus baru, dan GenAI akan menyusun cerita usaha dari daerah lain di Indonesia. Aplikasi memeriksa setiap angka agar tetap akurat secara matematis. Hitung produksi optimal, laba maksimum, dan kedua titik impas, lalu minta umpan balik dari GenAI.';
+  if(!st.s5.cs){st.s5.cs=localCase();st.s5.used.push(st.s5.cs.produk)}
+  const cs=st.s5.cs,aiOK=!!sampleFn;
+  $('#content').innerHTML=`<h2>Kasus baru dari penjuru Nusantara</h2><p class="meta">Tahap 6 dari 7 · sekitar 4 menit</p>
+  <p>GenAI menyusun kasus usaha lokal yang baru setiap kali kamu meminta. Aplikasi lalu memeriksa angkanya agar fungsi laba selalu valid dan punya jawaban bulat.</p>
+  <div class="row"><button class="btn primary" id="gen" type="button" ${aiOK?'':'disabled'}>✨ Buat kasus baru dengan GenAI</button><button class="btn" id="genL" type="button">Ambil dari bank kasus</button></div>
+  ${aiOK?'':'<p class="meta" style="margin-top:8px">GenAI tidak tersedia di tampilan ini (misalnya saat aplikasi dibuka di luar claude.ai). Latihan tetap berjalan dengan bank kasus bawaan.</p>'}
+  <div class="task"><p><span class="badge ${cs.src==='ai'?'ai':''}">${cs.src==='ai'?'Dibuat GenAI':'Bank kasus'}</span> <strong>${esc(cs.produk)}</strong> · ${esc(cs.daerah)}</p>
+  <p>${esc(cs.cerita)}</p><div class="eq">π(q) = −${cs.a===1?'':cs.a}q² + ${fmt(cs.b)}q − ${fmt(cs.c)}</div>
+  <p class="meta">q = jumlah ${esc(cs.satuan)} per bulan, π dalam ribu rupiah. Titik ⓘ di grafik muncul setelah jawabanmu benar.</p>
+  <div class="form"><label>Produksi optimal q*<input id="i1" inputmode="numeric"></label><label>Laba maksimum (ribu Rp)<input id="i2" inputmode="numeric"></label>
+  <label>BEP terkecil<input id="i3" inputmode="numeric"></label><label>BEP terbesar<input id="i4" inputmode="numeric"></label></div>
+  <label style="display:block;margin-top:10px;font-size:13px;font-weight:600">Jelaskan langkahmu (opsional, dibaca GenAI)<textarea id="why"></textarea></label>
+  <div class="row"><button class="btn primary" id="chk5" type="button">Periksa jawaban</button><button class="btn" id="fbai" type="button" ${aiOK?'':'disabled'}>Minta umpan balik GenAI</button></div>
+  <div class="fb" id="fb5"></div><div class="fb info" id="fbA"></div>${cs.tanya?`<p style="margin-top:12px"><strong>Refleksi:</strong> ${esc(cs.tanya)}</p>`:''}</div>${navHTML()}`;
+  drawCase(cs,false);
+  $('#gen').onclick=async()=>{const b=$('#gen');b.disabled=true;$('#genL').disabled=true;b.textContent='Menyusun kasus…';
+    try{const c=await aiCase();st.s5.cs=c;st.s5.used.push(c.produk);s5();bindNav()}
+    catch(e){toast(errCopy[e&&e.code]||'GenAI gagal menyusun kasus. Coba lagi atau ambil dari bank kasus.');if(e&&e.code==='not_granted')sampleFn=null;s5();bindNav()}};
+  $('#genL').onclick=()=>{st.s5.cs=localCase();st.s5.used.push(st.s5.cs.produk);s5();bindNav()};
+  const vals=()=>['i1','i2','i3','i4'].map(id=>num($('#'+id).value));
+  const key=[cs.h,cs.a*cs.d*cs.d,cs.h-cs.d,cs.h+cs.d],f=$('#fb5');
+  $('#chk5').onclick=()=>{const v=vals(),nm=['Produksi optimal','Laba maksimum','BEP terkecil','BEP terbesar'],ok=v.map((x,i)=>x===key[i]);
+    if(ok.every(Boolean)){fb(f,'ok',`<strong>Semua benar.</strong> q* = −b/2a = ${fmt(cs.b)}/${2*cs.a} = ${cs.h}, laba maksimum π(${cs.h}) = ${rp(key[1])}, dan BEP di ${key[2]} serta ${key[3]} ${esc(cs.satuan)}. Sentuh label ⓘ di grafik untuk penjelasan setiap titik.`);drawCase(cs,true);markDone(5)}
+    else fb(f,'bad',nm.map((n,i)=>`${ok[i]?'✓':'✗'} ${n}`).join('<br>')+'<br>Petunjuk: mulai dari q* = −b / 2a, lalu substitusikan ke π(q). Untuk BEP, selesaikan π(q) = 0 dengan memfaktorkan atau rumus abc.')};
+  const fa=$('#fbA');fa.style.display='none';
+  $('#fbai').onclick=async()=>{if(!sampleFn)return;const v=vals();fa.style.display='block';fa.textContent='GenAI sedang membaca jawabanmu…';$('#fbai').disabled=true;
+    const prompt=`Kamu tutor Matematika Bisnis yang hangat untuk mahasiswa Indonesia. Kasus: ${cs.tokoh}, usaha ${cs.produk} di ${cs.daerah}. Fungsi laba π(q) = −${cs.a}q² + ${cs.b}q − ${cs.c} (ribu rupiah, q dalam ${cs.satuan}).
+Kunci (JANGAN langsung sebutkan angka kunci yang dijawab salah): q* = ${key[0]}, laba maksimum = ${key[1]}, BEP = ${key[2]} dan ${key[3]}.
+Jawaban mahasiswa: q* = ${v[0]}, laba maks = ${v[1]}, BEP = ${v[2]} dan ${v[3]}. Penjelasan mahasiswa: "${($('#why').value||'(tidak ada)').slice(0,600)}".
+Beri umpan balik dalam bahasa Indonesia, maks 110 kata, teks biasa tanpa markdown: sebut yang sudah benar, untuk yang salah tunjukkan letak kekeliruan langkahnya dan beri satu pertanyaan penuntun, lalu tutup dengan satu kalimat makna hasil itu bagi keputusan bisnis ${cs.tokoh}.`;
+    try{await sampleFn(prompt,{modelTier:'quick',cache:false,onText:({text})=>{fa.textContent=text}})}
+    catch(e){fa.textContent=(e&&e.text)||errCopy[e&&e.code]||'Umpan balik GenAI belum bisa dimuat. Gunakan tombol Periksa jawaban.'}
+    finally{$('#fbai').disabled=!sampleFn}};
+}
+/* --- 6 --- */
+function s6(){
+  narrText='Rangkuman. Fungsi laba berbentuk parabola terbuka ke bawah. Titik impas adalah akar fungsi laba. Produksi optimal ada di puncak parabola, yaitu negatif b per dua a, tepat di tengah kedua titik impas. Biaya per unit menggeser titik optimal, sedangkan biaya tetap menggeser kurva naik atau turun.';
+  const n=st.done.slice(0,6).filter(Boolean).length,order=Math.round(M.q2+S());
+  $('#content').innerHTML=`<h2>Apa yang dipelajari dari usaha ${esc(C.nama)}</h2><p class="meta">Tahap 7 dari 7 · kamu menyelesaikan ${n} dari 6 tahap</p>
+  <ul class="clean"><li>Pendapatan R = p · q menjadi kuadrat karena harga turun saat jumlah naik.</li><li>Laba π(q) = R − C adalah parabola terbuka ke bawah (a negatif).</li>
+  <li>Titik impas adalah akar π(q) = 0: untuk ${esc(C.nama)}, ${f2(M.q1)} dan ${f2(M.q2)} ${esc(C.satuan)}.</li>
+  <li>Produksi optimal ada di puncak, q* = −b/2a = ${f2(M.qs)} ${esc(C.satuan)}, tepat di tengah kedua BEP.</li>
+  <li>Biaya per unit (b) menggeser titik optimal; biaya tetap (c) hanya menaikkan atau menurunkan kurva.</li></ul>${INFOHINT}
+  <div class="task"><h3>Refleksi</h3><p>${esc(C.nama)} mendapat pesanan ${order} ${esc(C.satuan)} dengan harga sesuai fungsi permintaan. Berdasarkan grafik, apakah sebaiknya ia menerima semua pesanan itu? Apa yang harus berubah agar ${order} ${esc(C.satuan)} tetap menguntungkan?</p></div>
+  <div class="row">${STEPS.slice(0,6).map((s,i)=>`<span class="badge">${st.done[i]?'✓':'○'} ${s.t}</span>`).join('')}</div>
+  <div class="row"><button class="btn" id="reset" type="button">Ulangi dari awal</button></div>${navHTML()}`;
+  viewProfit(undefined);V.qMax=Math.max(V.qMax,order+S()*0.5);orb.auto=true;
+  addCurve(P,0xE2B260,{r:.09});profitAxes();zoneLabels();revealProfitPoints();
+  banner(order,P);infoPoint(order,P(order),'Pesanan '+order,'Pesanan besar',`<p>Jika memproduksi ${order} ${esc(C.satuan)}, harga harus turun ke ${rp(price(order))} sehingga laba menjadi <b>${rp(P(order))}</b>.</p><p>Titik ini berada di zona rugi karena melewati BEP₂ (${f2(M.q2)}). Pesanan bisa diterima jika harga dinegosiasikan lebih tinggi atau biaya per ${esc(C.satuan)} ditekan.</p>`,0xFFB4A1);
+  hud([['Laba π(q)','#E2B260'],['ⓘ Titik penjelasan','#9FE8FF']]);
+  $('#reset').onclick=()=>{st.done=st.done.map(()=>false);Object.assign(st,fresh());go(0)};
+}
+
+/* ========== Mode Dosen ========== */
+const dlg=$('#dosen'),FIELDS_T=['judul','nama','profil','produk','satuan','labDesc','aiKonteks'],FIELDS_N=['a0','b0','F','v','dF','dv'];
+function fillForm(c){const f=dlg.querySelector('form');FIELDS_T.forEach(k=>f.elements[k].value=c[k]);FIELDS_N.forEach(k=>f.elements[k].value=String(c[k]).replace('.',','))}
+function readForm(){const f=dlg.querySelector('form'),o={};FIELDS_T.forEach(k=>o[k]=f.elements[k].value.trim());FIELDS_N.forEach(k=>o[k]=num(f.elements[k].value));return normalize(o)}
+function preview(){const c=readForm(),{e,w}=validate(c),box=$('#dPrev');
+  if(e.length){box.className='fb show bad';box.innerHTML=e.map(esc).join('<br>');return null}
+  const m=model(c);
+  box.className='fb show info';box.innerHTML=`<strong>Kunci jawaban otomatis</strong><br>
+  Fungsi laba: −${f2(c.b0)}q² + ${f2(m.B)}q − ${f2(c.F)}<br>
+  Tahap 2: rentang untung ${f2(m.q1)} sampai ${f2(m.q2)} ${esc(c.satuan)}<br>
+  Tahap 3: BEP = ${f2(m.q1)} dan ${f2(m.q2)}<br>
+  Tahap 4: q* = ${f2(m.qs)}, harga ${rp(c.a0-c.b0*m.qs)}, laba maksimum ${rp(m.pmax)}<br>
+  Tahap 5: fungsi baru −${f2(c.b0)}q² + ${f2(m.B2)}q − ${f2(m.F2)}, puncak ${f2(m.ts)}, BEP ${f2(m.t1)} dan ${f2(m.t2)}`+
+  (w.length?`<br><br><strong>Catatan:</strong> ${w.map(esc).join(' ')}`:'');return c}
+$('#btnDosen').onclick=()=>{fillForm(C);preview();
+  $('#dMode').textContent=db&&canEditCfg?'Pengaturan disimpan untuk semua mahasiswa yang membuka tautan aplikasi ini.':'Database bersama tidak tersedia di tampilan ini, jadi pengaturan hanya berlaku di perangkat ini. Untuk membagikan ke mahasiswa, buka aplikasi dari claude.ai sebagai pemilik.';
+  dlg.showModal()};
+dlg.querySelector('form').addEventListener('input',preview);
+$('#dCancel').onclick=()=>dlg.close();
+$('#dReset').onclick=()=>{fillForm(DEFAULT);preview()};
+$('#dSave').onclick=async e=>{e.preventDefault();const c=preview();if(!c){toast('Periksa kembali isian yang ditandai.');return}
+  setConfig(c);try{localStorage.setItem(LOCALKEY,JSON.stringify(c))}catch(err){}
+  if(db&&canEditCfg){try{await db.doc('config/main').set({...c});toast('Soal diperbarui untuk semua mahasiswa.')}catch(err){toast('Soal diperbarui di perangkat ini, tetapi gagal dibagikan. Periksa koneksi lalu simpan lagi.',6500)}}
+  else toast('Soal diperbarui di perangkat ini.');
+  st.done=st.done.map(()=>false);save();dlg.close();go(0)};
+
+render();
+})();
+</script>
+</body>
+</html>
